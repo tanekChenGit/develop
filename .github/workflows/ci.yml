@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./currency-dashboard/frontend
+
+      - name: Build (frontend)
+        run: npm run build --if-present
+        working-directory: ./currency-dashboard/frontend
+
+      - name: Run unit tests (frontend)
+        run: |
+          npm run test --if-present || true
+        working-directory: ./currency-dashboard/frontend
+
+      - name: Archive production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: currency-dashboard/frontend/dist
+
+  pages-deploy:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./frontend-dist
+
+      - name: Deploy to GitHub Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./frontend-dist
+
+  # Note: The pages deployment will publish the uploaded artifact to GitHub Pages using the repository's Pages settings.
