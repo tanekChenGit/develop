@@ -7,6 +7,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -58,12 +61,16 @@ jobs:
     if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v3
 
       - name: Download frontend artifact
         uses: actions/download-artifact@v4
@@ -71,10 +78,11 @@ jobs:
           name: frontend-dist
           path: ./frontend-dist
 
-      - name: Deploy to GitHub Pages
-        uses: actions/configure-pages@v3
-
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./frontend-dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
