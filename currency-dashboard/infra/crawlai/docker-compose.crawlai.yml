@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    restart: unless-stopped
+    volumes:
+      - /dev/shm:/dev/shm
+    ports:
+      - "11235:11235"
+    deploy:
+        resources:
+          limits:
+            memory: 2G
+          reservations:
+            memory: 1G
