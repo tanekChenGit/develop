@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import icon from '../../../../assets/visionary/icon-exchange.svg';
+import icon from '../assets/visionary/icon-exchange.svg';
 
 type Point = { date: string; rate: number };
 
